@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TicketEventos | Benjamin Cheuquemilla - TI3041 - 2026</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
+    body { background: #f4f6fa; color: #222; min-height: 100vh; display: flex; flex-direction: column; }
+    header {
+      background: linear-gradient(135deg, #1e3a8a, #7c3aed);
+      color: white; padding: 18px 28px; display: flex;
+      justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
+    }
+    header h1 { font-size: 1.4rem; }
+    header .user-info { font-size: 0.9rem; display: flex; gap: 14px; align-items: center; }
+    header button {
+      background: #ef4444; color: white; border: none; padding: 8px 14px;
+      border-radius: 6px; cursor: pointer; font-weight: bold;
+    }
+    header button:hover { background: #dc2626; }
+    main { flex: 1; padding: 24px; max-width: 1200px; margin: 0 auto; width: 100%; }
+    .card {
+      background: white; border-radius: 10px; padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07); margin-bottom: 18px;
+    }
+    h2 { color: #1e3a8a; margin-bottom: 14px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+    .evento {
+      background: white; border-radius: 10px; padding: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07); border-left: 4px solid #7c3aed;
+    }
+    .evento h3 { color: #1e3a8a; margin-bottom: 8px; }
+    .evento p { font-size: 0.9rem; margin-bottom: 6px; color: #555; }
+    .sector {
+      background: #f9fafb; border-radius: 6px; padding: 8px 10px;
+      margin-top: 8px; display: flex; justify-content: space-between; align-items: center;
+      font-size: 0.9rem;
+    }
+    .sector button {
+      background: #10b981; color: white; border: none; padding: 6px 12px;
+      border-radius: 5px; cursor: pointer; font-weight: bold;
+    }
+    .sector button:hover { background: #059669; }
+    .sector button:disabled { background: #9ca3af; cursor: not-allowed; }
+    .btn {
+      background: #1e3a8a; color: white; border: none; padding: 10px 18px;
+      border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.95rem;
+    }
+    .btn:hover { background: #1e40af; }
+    .btn-danger { background: #ef4444; }
+    .btn-danger:hover { background: #dc2626; }
+    .btn-success { background: #10b981; }
+    .btn-success:hover { background: #059669; }
+    input, select {
+      padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;
+      width: 100%; margin-bottom: 10px; font-size: 0.95rem;
+    }
+    .form-box { max-width: 400px; margin: 40px auto; }
+    .error { color: #ef4444; font-size: 0.85rem; margin-bottom: 10px; }
+    .msg { padding: 10px 14px; border-radius: 6px; margin-bottom: 12px; font-size: 0.9rem; }
+    .msg-ok { background: #d1fae5; color: #065f46; }
+    .msg-err { background: #fee2e2; color: #991b1b; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { text-align: left; padding: 10px; border-bottom: 1px solid #e5e7eb; font-size: 0.9rem; }
+    th { background: #f3f4f6; color: #1e3a8a; }
+    .total { text-align: right; font-size: 1.1rem; font-weight: bold; color: #1e3a8a; margin-top: 10px; }
+    .ticket {
+      background: #f0fdf4; border: 1px dashed #10b981; border-radius: 6px;
+      padding: 10px; margin-top: 8px; font-family: monospace; font-size: 0.85rem;
+    }
+    nav.tabs { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
+    nav.tabs button {
+      background: white; border: 1px solid #d1d5db; padding: 8px 16px;
+      border-radius: 6px; cursor: pointer; font-weight: bold; color: #1e3a8a;
+    }
+    nav.tabs button.active { background: #1e3a8a; color: white; border-color: #1e3a8a; }
+    footer {
+      background: #1e293b; color: #cbd5e1; text-align: center;
+      padding: 14px; font-size: 0.85rem;
+    }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🎟️ TicketEventos</h1>
+  <div class="user-info">
+    <span id="user-label">Invitado</span>
+    <button id="btn-logout" class="hidden" onclick="logout()">Cerrar sesión</button>
+  </div>
+</header>
+
+<main>
+  <!-- MENSAJES -->
+  <div id="msg-container"></div>
+
+  <!-- SECCIÓN LOGIN / REGISTRO -->
+  <section id="seccion-auth">
+    <div class="card form-box">
+      <h2 id="auth-title">Iniciar sesión</h2>
+      <div id="auth-error" class="error"></div>
+      <input type="text" id="auth-username" placeholder="Usuario" />
+      <input type="password" id="auth-password" placeholder="Contraseña" />
+      <div id="registro-extra" class="hidden">
+        <input type="email" id="auth-email" placeholder="Email" />
+        <select id="auth-rol">
+          <option value="ESPECTADOR">Espectador</option>
+          <option value="ORGANIZADOR">Organizador</option>
+        </select>
+      </div>
+      <button class="btn" style="width:100%" onclick="enviarAuth()" id="auth-btn">Ingresar</button>
+      <p style="text-align:center;margin-top:12px;font-size:0.9rem">
+        <a href="#" onclick="toggleModoAuth(event)" id="auth-toggle">¿No tienes cuenta? Regístrate</a>
+      </p>
+    </div>
+  </section>
+
+  <!-- SECCIÓN APP (catálogo, carro, mis entradas) -->
+  <section id="seccion-app" class="hidden">
+    <nav class="tabs">
+      <button id="tab-catalogo" class="active" onclick="mostrarTab('catalogo')">🎭 Catálogo</button>
+      <button id="tab-carro" onclick="mostrarTab('carro')">🛒 Carro (<span id="carro-count">0</span>)</button>
+      <button id="tab-entradas" onclick="mostrarTab('entradas')">🎫 Mis Entradas</button>
+    </nav>
+
+    <!-- CATÁLOGO -->
+    <div id="view-catalogo">
+      <div class="card">
+        <h2>Eventos disponibles</h2>
+        <input type="text" id="filtro-nombre" placeholder="Buscar por nombre..." oninput="cargarEventos()" />
+        <div id="lista-eventos" class="grid"></div>
+      </div>
+    </div>
+
+    <!-- CARRO -->
+    <div id="view-carro" class="hidden">
+      <div class="card">
+        <h2>Mi Carro</h2>
+        <div id="carro-contenido"></div>
+      </div>
+    </div>
+
+    <!-- MIS ENTRADAS -->
+    <div id="view-entradas" class="hidden">
+      <div class="card">
+        <h2>Mis Entradas</h2>
+        <div id="entradas-contenido"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  Benjamin Cheuquemilla &nbsp;|&nbsp; Sección TI3041 &nbsp;|&nbsp; Año 2026
+</footer>
+
+<script>
+/* ============================================================
+   CONFIGURACIÓN Y ESTADO
+   ============================================================ */
+const API = '/api';
+let accessToken = localStorage.getItem('access') || null;
+let refreshToken = localStorage.getItem('refresh') || null;
+let usuarioActual = JSON.parse(localStorage.getItem('usuario') || 'null');
+let modoRegistro = false;
+
+/* ============================================================
+   UTILIDADES
+   ============================================================ */
+function mostrarMsg(texto, tipo = 'ok') {
+  const cont = document.getElementById('msg-container');
+  cont.innerHTML = `<div class="msg msg-${tipo}">${texto}</div>`;
+  setTimeout(() => { cont.innerHTML = ''; }, 3500);
+}
+
+async function apiFetch(url, opciones = {}) {
+  opciones.headers = opciones.headers || {};
+  opciones.headers['Content-Type'] = 'application/json';
+  if (accessToken) opciones.headers['Authorization'] = `Bearer ${accessToken}`;
+  const res = await fetch(API + url, opciones);
+  if (res.status === 401 && refreshToken) {
+    // Intentar refrescar token
+    const r = await fetch(API + '/token/refresh/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh: refreshToken }),
+    });
+    if (r.ok) {
+      const data = await r.json();
+      accessToken = data.access;
+      localStorage.setItem('access', accessToken);
+      opciones.headers['Authorization'] = `Bearer ${accessToken}`;
+      return fetch(API + url, opciones);
+    } else {
+      logout();
+    }
+  }
+  return res;
+}
+
+/* ============================================================
+   AUTENTICACIÓN
+   ============================================================ */
+function toggleModoAuth(e) {
+  e.preventDefault();
+  modoRegistro = !modoRegistro;
+  document.getElementById('auth-title').textContent = modoRegistro ? 'Registrarse' : 'Iniciar sesión';
+  document.getElementById('auth-btn').textContent = modoRegistro ? 'Registrarse' : 'Ingresar';
+  document.getElementById('registro-extra').classList.toggle('hidden', !modoRegistro);
+  document.getElementById('auth-toggle').textContent = modoRegistro
+    ? '¿Ya tienes cuenta? Inicia sesión'
+    : '¿No tienes cuenta? Regístrate';
+  document.getElementById('auth-error').textContent = '';
+}
+
+async function enviarAuth() {
+  const username = document.getElementById('auth-username').value.trim();
+  const password = document.getElementById('auth-password').value;
+  const errorDiv = document.getElementById('auth-error');
+  errorDiv.textContent = '';
+
+  if (!username || !password) {
+    errorDiv.textContent = 'Debes completar usuario y contraseña.';
+    return;
+  }
+
+  if (modoRegistro) {
+    const email = document.getElementById('auth-email').value.trim();
+    const rol = document.getElementById('auth-rol').value;
+    const res = await fetch(API + '/registro/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password, email, rol }),
+    });
+    if (!res.ok) {
+      const data = await res.json();
+      errorDiv.textContent = JSON.stringify(data);
+      return;
+    }
+  }
+
+  // Login
+  const res = await fetch(API + '/login/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password }),
+  });
+  if (!res.ok) {
+    errorDiv.textContent = 'Credenciales inválidas.';
+    return;
+  }
+  const data = await res.json();
+  accessToken = data.access;
+  refreshToken = data.refresh;
+  usuarioActual = data.usuario;
+  localStorage.setItem('access', accessToken);
+  localStorage.setItem('refresh', refreshToken);
+  localStorage.setItem('usuario', JSON.stringify(usuarioActual));
+  mostrarMsg(`Bienvenido, ${usuarioActual.username}`, 'ok');
+  iniciarApp();
+}
+
+function logout() {
+  accessToken = null;
+  refreshToken = null;
+  usuarioActual = null;
+  localStorage.removeItem('access');
+  localStorage.removeItem('refresh');
+  localStorage.removeItem('usuario');
+  document.getElementById('seccion-app').classList.add('hidden');
+  document.getElementById('seccion-auth').classList.remove('hidden');
+  document.getElementById('btn-logout').classList.add('hidden');
+  document.getElementById('user-label').textContent = 'Invitado';
+  mostrarMsg('Sesión cerrada.', 'ok');
+}
+
+function iniciarApp() {
+  document.getElementById('seccion-auth').classList.add('hidden');
+  document.getElementById('seccion-app').classList.remove('hidden');
+  document.getElementById('btn-logout').classList.remove('hidden');
+  document.getElementById('user-label').textContent =
+    `${usuarioActual.username} (${usuarioActual.rol})`;
+  cargarEventos();
+  cargarCarro();
+}
+
+/* ============================================================
+   TABS
+   ============================================================ */
+function mostrarTab(tab) {
+  ['catalogo', 'carro', 'entradas'].forEach(t => {
+    document.getElementById('view-' + t).classList.toggle('hidden', t !== tab);
+    document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+  });
+  if (tab === 'carro') cargarCarro();
+  if (tab === 'entradas') cargarEntradas();
+}
+
+/* ============================================================
+   CATÁLOGO
+   ============================================================ */
+async function cargarEventos() {
+  const busqueda = document.getElementById('filtro-nombre').value.trim();
+  let url = '/eventos/?estado=PUBLICADO';
+  if (busqueda) url += `&search=${encodeURIComponent(busqueda)}`;
+  const res = await apiFetch(url);
+  const data = await res.json();
+  const lista = data.results || data;
+  const cont = document.getElementById('lista-eventos');
+  if (!lista.length) {
+    cont.innerHTML = '<p>No hay eventos disponibles.</p>';
+    return;
+  }
+  cont.innerHTML = lista.map(ev => `
+    <div class="evento">
+      <h3>${ev.nombre}</h3>
+      <p>📍 ${ev.lugar}</p>
+      <p>📅 ${new Date(ev.fecha).toLocaleString('es-CL')}</p>
+      <p>${ev.descripcion || ''}</p>
+      <div style="margin-top:10px">
+        ${ev.sectores.map(s => `
+          <div class="sector">
+            <span><b>${s.nombre}</b> — $${s.precio} (stock: ${s.stock})</span>
+            <button ${s.stock <= 0 ? 'disabled' : ''} onclick="agregarAlCarro(${s.id})">
+              ${s.stock <= 0 ? 'Agotado' : 'Agregar'}
+            </button>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ============================================================
+   CARRO
+   ============================================================ */
+async function agregarAlCarro(sectorId) {
+  const res = await apiFetch('/carro/items/', {
+    method: 'POST',
+    body: JSON.stringify({ sector: sectorId, cantidad: 1 }),
+  });
+  if (res.ok) {
+    mostrarMsg('Producto agregado al carro.', 'ok');
+    cargarCarro();
+  } else {
+    const data = await res.json();
+    mostrarMsg('Error: ' + JSON.stringify(data), 'err');
+  }
+}
+
+async function cargarCarro() {
+  const res = await apiFetch('/carro/');
+  if (!res.ok) return;
+  const carro = await res.json();
+  document.getElementById('carro-count').textContent = carro.cantidad_items;
+  const cont = document.getElementById('carro-contenido');
+  if (!carro.items.length) {
+    cont.innerHTML = '<p>Tu carro está vacío.</p>';
+    return;
+  }
+  cont.innerHTML = `
+    <table>
+      <thead>
+        <tr><th>Evento</th><th>Sector</th><th>Precio</th><th>Cant.</th><th>Subtotal</th><th></th></tr>
+      </thead>
+      <tbody>
+        ${carro.items.map(i => `
+          <tr>
+            <td>${i.sector_detalle.evento_nombre}</td>
+            <td>${i.sector_detalle.nombre}</td>
+            <td>$${i.sector_detalle.precio}</td>
+            <td>${i.cantidad}</td>
+            <td>$${i.subtotal}</td>
+            <td><button class="btn btn-danger" onclick="eliminarItem(${i.id})">X</button></td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+    <div class="total">Total: $${carro.total}</div>
+    <div style="margin-top:14px;display:flex;gap:10px">
+      <button class="btn btn-success" onclick="hacerCheckout()">Confirmar compra (Checkout)</button>
+      <button class="btn btn-danger" onclick="vaciarCarro()">Vaciar carro</button>
+    </div>
+  `;
+}
+
+async function eliminarItem(id) {
+  await apiFetch(`/carro/items/${id}/`, { method: 'DELETE' });
+  cargarCarro();
+}
+
+async function vaciarCarro() {
+  if (!confirm('¿Vaciar el carro?')) return;
+  await apiFetch('/carro/vaciar/', { method: 'DELETE' });
+  cargarCarro();
+}
+
+async function hacerCheckout() {
+  const res = await apiFetch('/compras/checkout/', { method: 'POST' });
+  if (!res.ok) {
+    mostrarMsg('Error al hacer checkout.', 'err');
+    return;
+  }
+  const compra = await res.json();
+  mostrarMsg(`Orden #${compra.id} creada. Total: $${compra.total}. Procediendo al pago...`, 'ok');
+  // Pagar automáticamente (simula confirmación de pago)
+  const res2 = await apiFetch(`/compras/${compra.id}/pagar/`, { method: 'POST' });
+  if (res2.ok) {
+    mostrarMsg('¡Pago exitoso! Se generaron tus tickets.', 'ok');
+    cargarCarro();
+    mostrarTab('entradas');
+  } else {
+    const data = await res2.json();
+    mostrarMsg('Error al pagar: ' + JSON.stringify(data), 'err');
+  }
+}
+
+/* ============================================================
+   MIS ENTRADAS
+   ============================================================ */
+async function cargarEntradas() {
+  const res = await apiFetch('/mis-entradas/');
+  if (!res.ok) return;
+  const data = await res.json();
+  const lista = data.results || data;
+  const cont = document.getElementById('entradas-contenido');
+  if (!lista.length) {
+    cont.innerHTML = '<p>No tienes entradas aún.</p>';
+    return;
+  }
+  cont.innerHTML = lista.map(t => `
+    <div class="ticket">
+      <b>${t.evento_nombre}</b> — Sector: ${t.sector_nombre}<br>
+      Código: <b>${t.codigo}</b><br>
+      Emitido: ${new Date(t.creado_en).toLocaleString('es-CL')}
+    </div>
+  `).join('');
+}
+
+/* ============================================================
+   INICIALIZACIÓN
+   ============================================================ */
+if (accessToken && usuarioActual) {
+  iniciarApp();
+}
+</script>
+
+</body>
+</html>
